@@ -7,15 +7,15 @@ var Workspace = vscode.workspace;
 var language = require('./language');
 var Todo = require('./models').Todo;
 
-helper.getUsersWorkspaceConfigurations = function() {
-  return Workspace.getConfiguration();  
+helper.getUsersWorkspaceConfigurations = function () {
+    return Workspace.getConfiguration("vscode-todo");
 };
 
-helper.getFileExtensionForLanguage = function(choosenLanguage) {
+helper.getFileExtensionForLanguage = function (choosenLanguage) {
     return language[choosenLanguage].extension;
 };
 
-helper.getFileExludeForLanguage = function(choosenLanguage, workspaceConfig) {
+helper.getFileExludeForLanguage = function (choosenLanguage, workspaceConfig) {
     var exclude = '{' + '.vscode' + language[choosenLanguage].exclude;
     if (workspaceConfig.todoIgnore) {
         var usersExclude = '';
@@ -30,16 +30,16 @@ helper.getFileExludeForLanguage = function(choosenLanguage, workspaceConfig) {
     return exclude;
 };
 
-helper.getScanRegexForLanguage = function(choosenLanguage, workspaceConfig) {
+helper.getScanRegexForLanguage = function (choosenLanguage, workspaceConfig) {
     //TODO: Add per-language specific scan expressions
     var regex = "(?:TODO|FIXME)\\s*\\W{0,1}(\\s+.*|(?:\\w|\\d).*)$";
-    if(workspaceConfig.todoScanRegex){
+    if (workspaceConfig.todoScanRegex) {
         regex = workspaceConfig.todoScanRegex;
     }
     return regex;
 };
 
-var getTodoMessage = function(lineText, match) {
+var getTodoMessage = function (lineText, match) {
     var todoMessage = lineText.substring(lineText.indexOf(match[1]), lineText.length);
     if (todoMessage.length > 60) {
         todoMessage = todoMessage.substring(0, 57).trim();
@@ -48,7 +48,7 @@ var getTodoMessage = function(lineText, match) {
     return todoMessage;
 };
 
-var getTodoLocation = function(pathWithoutFile, todoMessage, line, match) {
+var getTodoLocation = function (pathWithoutFile, todoMessage, line, match)  {
     var rootPath = Workspace.rootPath + '/';
     var outputFile = pathWithoutFile.replace(rootPath, '');
     var todoLocation = outputFile + ' ' + (line + 1) + ':' + (todoMessage.indexOf(match[1]) + 1);
@@ -58,12 +58,12 @@ var getTodoLocation = function(pathWithoutFile, todoMessage, line, match) {
     return todoLocation;
 };
 
-var findTodosinSpecifiedFile = function(file, todos, todosList, scanRegex) {
+var findTodosinSpecifiedFile = function (file, todos, todosList, scanRegex) {
     var fileInUri = file.uri.toString();
     var pathWithoutFile = fileInUri.substring(7, fileInUri.length);
-    
+
     var regex = new RegExp(scanRegex, "i");
-    
+
     for (var line = 0; line < file.lineCount; line++) {
         var lineText = file.lineAt(line).text;
         var match = lineText.match(regex);
@@ -80,7 +80,7 @@ var findTodosinSpecifiedFile = function(file, todos, todosList, scanRegex) {
     }
 };
 
-var findTodosinFiles = function(files, choosenLanguage, scanRegex, done) {
+var findTodosinFiles = function (files, choosenLanguage, scanRegex, done)  {
     var todos = {};
     todosList = [];
     var times = 0;
@@ -90,9 +90,9 @@ var findTodosinFiles = function(files, choosenLanguage, scanRegex, done) {
         done({ message: 'no files' }, null, null);
     } else {
         for (var i = 0; i < files.length; i++) {
-            Workspace.openTextDocument(files[i]).then(function(file) {
+            Workspace.openTextDocument(files[i]).then(function (file) {
                 findTodosinSpecifiedFile(file, todos, todosList, scanRegex);
-            }).then(function() {
+            }).then(function () {
                 times++;
                 if (times === files.length) {
                     return done(null, todos, todosList);
@@ -102,15 +102,15 @@ var findTodosinFiles = function(files, choosenLanguage, scanRegex, done) {
     }
 };
 
-helper.findFiles = function(extension, exclude, choosenLanguage, scanRegex, done) {
-    Workspace.findFiles(extension, exclude, 1000).then(function(files) {
-        findTodosinFiles(files, choosenLanguage, scanRegex, function(err, todos, todosList) {
+helper.findFiles = function (extension, exclude, choosenLanguage, scanRegex, done)  {
+    Workspace.findFiles(extension, exclude, 1000).then(function (files) {
+        findTodosinFiles(files, choosenLanguage, scanRegex, function (err, todos, todosList) {
             done(err, todos, todosList);
         });
     });
 };
 
-helper.createStatusBarItem = function() {
+helper.createStatusBarItem = function () {
     var statusBarItem = Window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     statusBarItem.text = 'TODO:s';
     statusBarItem.tooltip = 'Show TODO:s';

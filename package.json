@@ -5,7 +5,7 @@
   "publisher": "MattiasPernhult",
   "icon": "images/vscode-todo.png",
   "scripts": {
-    "test": "mocha --recursive test/"  
+    "test": "mocha --recursive test/"
   },
   "galleryBanner": {
     "color": "#5c2d91",
@@ -33,6 +33,27 @@
   ],
   "main": "./extension",
   "contributes": {
+    "configuration": {
+      "title": "vscode-todo configuration",
+      "properties": {
+        "vscode-todo.todoScanRegex": {
+          "type": "string",
+          "default": "",
+          "description": "Used to customize the scan expression"
+        },
+        "vscode-todo.todoIgnore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "default": [
+            "**/node_modules"
+          ],
+          "description": "An array of glob patterns that specifies files/folders to ignore"
+        }
+      }
+    },
     "commands": [
       {
         "command": "extension.chooseLanguageTodo",
